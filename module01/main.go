@@ -1,6 +1,6 @@
 package main
 
-//welcome to my world
+//welcome to my world :) lets ~GO
 
 import (
 	"fmt"
