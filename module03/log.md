@@ -1,6 +1,6 @@
 ## Module 3
 
-This folder contains for pointers, types & structs,  arrays (slicing, make, append, range, maps)
+This folder contains for pointers, types, structs,  arrays & slice (make, append, range, maps)
 
 ## Installation
 clone the Repository
