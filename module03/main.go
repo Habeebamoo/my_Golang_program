@@ -16,6 +16,11 @@ type Vertex2 struct {
 	Lat, Long float64
 }
 
+type Nest struct {
+	Math int
+	Eng int
+}
+
 var (
 	v1 = Vertex{4,5}
 	v2 = Vertex{X: 1}
@@ -324,6 +329,20 @@ func main() {
 	}
 	fmt.Println(value)
 
+	//nested maps
+	students := map[string]map[string]int {
+		"Alice": {
+			"maths": 78,
+			"eng": 76,
+		},
+	}
+	fmt.Printf("Alice maths score is %d\n", students["Alice"]["maths"])
+
+	//nested maps with structs
+	pupils := map[string]Nest {
+		"Bob": {Math: 67, Eng: 87},
+	}
+	fmt.Printf("Bob's english score is %d\n", pupils["Bob"].Eng) //logic!!! :)
 
 
 	////////////////////////////////////////
@@ -332,13 +351,24 @@ func main() {
 	fmt.Println(test50)
 
 	//now passing the function as a value
-	hypot := func (x, y float64) float64  {
+	hypot := func (x, y float64) float64  {  //like js arrow func
 		return  math.Sqrt(x*x + y*y)
 	}
 	fmt.Println(hypot(3, 4))
 
 	//calls the OMG func 😢
 	fmt.Println(compute(hypot))
+
+	//passing funcs as aguments
+	fmt.Println(perform(addition, 10, 100))
+}
+
+func perform(fn func(int, int) int, x, y int) int {
+	return fn(x, y)
+}
+
+func addition(x, y int) int {
+	return x + y
 }
 
 func returnFunc() string {
