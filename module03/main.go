@@ -4,10 +4,16 @@ package main
 
 import (
 	"fmt"
+	"math"
+	"strings"
 )
 
 type Vertex struct {
 	X, Y int
+}
+
+type Vertex2 struct {
+	Lat, Long float64
 }
 
 var (
@@ -20,6 +26,13 @@ var (
 //a pointer function
 func incrementValue(x *int) {
 	*x = *x + 1 //modifies the value of point
+}
+
+//oh my God, what the fuck is this
+//this function takes a fuction as params which takes 2 float64 type as params and returns a float64 type which then returns another float64 type
+// :) :(
+func compute(fn func(float64, float64) float64) float64 {
+	return fn(3, 4)
 }
 
 func main() {
@@ -166,6 +179,178 @@ func main() {
 	matrix[1][1] = 5
 	matrix[1][2] = 6
 	fmt.Println(matrix)
+
+	//make function
+	langs := make([]int, 5) //creates an array of 5-len
+	frams := make([]int, 0, 5) //creates an array 0-len 5-cap
+
+	frams = frams[:cap(frams)] //prepopulates the array to 5
+	frams = frams[1:] //slice it to 4
+
+	fmt.Println(langs)
+	fmt.Println(frams)
+
+	test := make([]int, 5)
+	secondPrintSlice("test", test)
+
+	test2 := make([]int, 0, 5)
+	secondPrintSlice("test2", test2)
+
+	replit_test2 := test2[:2]
+	secondPrintSlice("replit_test2", replit_test2)
+
+
+	//just decided to over complicate things here :)
+	replit_test2_test2 := replit_test2[2:5]
+	secondPrintSlice("replit_test2_test2", replit_test2_test2)
+
+
+	//a tic tac toe board
+	board := [][]string{
+		[]string{"_", "_", "_"},
+		[]string{"_", "_", "_"},
+		[]string{"_", "_", "_"},
+	}
+
+	//make turns
+	board[0][0] = "X"
+	board[0][2] = "O"
+	board[1][1] = "X"
+	board[1][2] = "O"
+	board[2][2] = "X"
+
+	for i := 0; i < len(board); i++ {
+		fmt.Printf("%s\n", strings.Join(board[i], " "))
+	}
+
+	//append function
+	var schools []int
+	thirdPrintSlice(schools)
+
+	//append works on nil slices
+	schools = append(schools, 0)
+	thirdPrintSlice(schools)
+
+	//the slice grow as needed
+	schools = append(schools, 1)
+	thirdPrintSlice(schools)
+
+	//i can add more than one elements at a time
+	schools = append(schools, 2,3,4,5,6)
+	thirdPrintSlice(schools)
+
+	//looped through this array to prepopulate the schools array
+	wannaBeSchools := []int{7,8,9,10,11,12}
+	for i := 0; i < len(wannaBeSchools); i++ {
+		schools = append(schools, wannaBeSchools[i])
+	}
+	thirdPrintSlice(schools)
+
+	//range
+	//range returns to values
+	//1: the index
+	//2: the value
+	var pow = []int{1,2,4,8,16,32,64,128}
+	for i, v := range pow {
+		fmt.Printf("2**%d = %d.\n", i, v)
+	}
+
+	for i, v := range pow {
+		fmt.Printf("pow index %d = %d.\n", i, v)
+	}
+
+	service := make([]int, 10) //make the arry
+	for i := range service { //loops through and populates the values
+		service[i] = 1 << uint(i)
+	}
+	fmt.Println(service)
+
+	for _, value := range service { //now it has access to the values
+		fmt.Printf("%d.\n", value)
+	}
+
+
+
+	////////////////////////////////
+	//maps
+
+	var m = make(map[string]Vertex2)
+	m["Bella Labs"] = Vertex2{
+		40.64, 54.23,
+	}
+	fmt.Println(m["Bella Labs"])
+
+	var n = map[string]Vertex2 {
+		"Bella labs": Vertex2 {
+			32.89, 90.34,
+		},
+		"Google": Vertex2{
+			64.11, 35.14,
+		},
+	}
+
+	fmt.Println(n)
+
+	//i can omit here
+	var mapped = map[string]Vertex2{ //type a string array of type Vertex2
+		"First": {65.45, 89.0}, //omited vertex
+	}
+	fmt.Println(mapped)
+
+	mapTest := make(map[string]int) //an array of prop-string : value-int
+	mapTest["Answer"] = 10 //assigning the values
+	mapTest["Answer"] = 15 //i can reassign :)
+
+	delete(mapTest, "Answer") //delete elem : key
+	fmt.Println(mapTest)
+	mapTest["Answer"] = 20
+	
+	mapV, ok := mapTest["Answer"] //checks the array
+	fmt.Println("The value: ", mapV, "Present? ",ok)
+
+
+	//declaring an array of prop-string : value-string
+	myMapValue := map[string]string{
+		"Monday": "first",
+		"Tuesday": "second",
+	}
+
+	//programs checks if wednesday exists on the array
+	value, ok := myMapValue["Monday"]
+	if ok {
+		fmt.Println("wednesday exists")
+	} else {
+		fmt.Println("wednesday does not exists")
+	}
+	fmt.Println(value)
+
+
+
+	////////////////////////////////////////
+	//functions as a value
+	test50 := returnFunc() //basic 😎
+	fmt.Println(test50)
+
+	//now passing the function as a value
+	hypot := func (x, y float64) float64  {
+		return  math.Sqrt(x*x + y*y)
+	}
+	fmt.Println(hypot(3, 4))
+
+	//calls the OMG func 😢
+	fmt.Println(compute(hypot))
+}
+
+func returnFunc() string {
+	return "yes"
+}
+
+func thirdPrintSlice(arr []int) {
+	fmt.Printf("len=%d , cap=%d , %v.\n", len(arr), cap(arr), arr)
+}
+
+func secondPrintSlice (s string, x []int) {
+	fmt.Printf("%s len=%d, cap=%d, %v.\n", s, len(x), cap(x), x)
 }
 
 func printSlice(x []int) {
