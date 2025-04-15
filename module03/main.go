@@ -154,6 +154,7 @@ func main() {
 	fmt.Printf("Last 6 %v\n", lastSix)
 	fmt.Printf("All 12 %v\n", allTwelve)
 
+	//slice
 	integers := []int {1,2,3,4,5,6,7,8,9,10}
 	printSlice(integers)
 
@@ -186,10 +187,10 @@ func main() {
 	fmt.Println(matrix)
 
 	//make function
-	langs := make([]int, 5) //creates an array of 5-len
-	frams := make([]int, 0, 5) //creates an array 0-len 5-cap
+	langs := make([]int, 5) //creates an slice of 5-len
+	frams := make([]int, 0, 5) //creates an slics 0-len 5-cap
 
-	frams = frams[:cap(frams)] //prepopulates the array to 5
+	frams = frams[:cap(frams)] //prepopulates the slice to 5
 	frams = frams[1:] //slice it to 4
 
 	fmt.Println(langs)
