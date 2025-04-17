@@ -33,8 +33,7 @@ func incrementValue(x *int) {
 	*x = *x + 1 //modifies the value of point
 }
 
-//oh my God, what the fuck is this
-//this function takes a fuction as params which takes 2 float64 type as params and returns a float64 type which then returns another float64 type
+//A function takes a fuction as params which takes 2 float64 type as params and returns a float64 type which then returns another float64 type
 // :) :(
 func compute(fn func(float64, float64) float64) float64 {
 	return fn(3, 4)
@@ -357,7 +356,7 @@ func main() {
 	}
 	fmt.Println(hypot(3, 4))
 
-	//calls the OMG func 😢
+	
 	fmt.Println(compute(hypot))
 
 	//passing funcs as aguments
