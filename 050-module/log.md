@@ -1,9 +1,11 @@
-## Welcome to my first Golang Program :)
+## Module 5
+
+This folder contains Generics and Error handling
 
 ## Installation
 clone the Repository
 
 ``` bash 
 git clone "https://github.com/Habeebamoo/my_Golang_program.git 
-cd my_Golang_program/module01
+cd my_Golang_program/050-module
 go run main.go

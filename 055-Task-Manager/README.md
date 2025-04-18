@@ -14,5 +14,5 @@ Your tasks are stored on your computer memory
 
 ```bash
 git clone "https://github.com/Habeebamoo/my_Golang_program
-cd my_Golang_program/task-manager
+cd my_Golang_program/055-task-manager
 go run main.go
