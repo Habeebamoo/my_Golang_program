@@ -2,10 +2,17 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
+)
+
+//defining my errors
+var (
+	ErrStudentAlreadyExist = errors.New("\n❌ Student with this name already exists ❌\n")
+	ErrStudentDoesNotExist = errors.New("\n❌ Student with this ID does not exist ❌\n")
 )
 
 type Student struct {
@@ -35,12 +42,11 @@ func viewAllStudents() {
 }
 
 //add new student 
-func addNewStudent(s NewStudent) {
+func addNewStudent(s NewStudent) (int, error) {
 	//checks if student Name already exists
 	for _, student := range classroom {
 		if student.Name == s.Name {
-			fmt.Printf("\n❌ Student already exists ❌\n")
-			return
+			return 0, ErrStudentAlreadyExist
 		}
 	}
 
@@ -56,24 +62,33 @@ func addNewStudent(s NewStudent) {
 
 	classroom = append(classroom, &Student{id, s.Name, s.Age, defaultGrade})
 	fmt.Println("\n✅ Student has been added successfully")
+	return 1, nil
 }
 
 //remove existing student
-func removeStudent(id int) {
+func removeStudent(id int) (int, error) {
 	for i, student := range classroom {
 		if student.ID == id {
 			fmt.Printf("\nRemoving %s profile\n", student.Name)
 			classroom = append(classroom[:i], classroom[i+1:]...)
 			fmt.Println("\n✅ Student profile has been deleted")
-			return
+			return 1, nil
 		}
 	}
 
-	fmt.Printf("\n❌ Student with this ID does not exist ❌\n")
+	return 0, ErrStudentDoesNotExist
 }
 
 //update student data
 func updateStudentData(id, mathScore, engScore, phyScore, chemScore, bioScore int) {
+	//checks if student exist
+	for _, student := range classroom {
+		if student.ID != id {
+			fmt.Printf("\n❌ Student with this ID does not exist ❌\n")
+			return
+		}
+	}
+
 	var existingStudent *Student
 
 	for _, student := range classroom {
@@ -93,6 +108,11 @@ func updateStudentData(id, mathScore, engScore, phyScore, chemScore, bioScore in
 	existingStudent.Grades = updatedGrades
 }
 
+func handleError(err error) {
+	if err != nil {
+		fmt.Println(err)
+	}
+}
 
 func main() {
 	defer fmt.Println("\nGood Bye.")
@@ -108,11 +128,9 @@ func main() {
 		switch prompt {
 		case "1":
 			viewAllStudents()
-			fmt.Printf("Enter (e) to return: ")
+
+			fmt.Printf("Enter any key to return: ")
 			scanner.Scan()
-			if key := scanner.Text(); key == "E" {
-				return
-			}
 		case "2":
 			fmt.Printf("\nStudents Name (e.g john-doe): ")
 			scanner.Scan()
@@ -125,33 +143,30 @@ func main() {
 			age, err := strconv.Atoi(strings.TrimSpace(ageStr))
 			if err != nil {
 				fmt.Printf("❌ Unsupported input format ❌\n")
-				return
+			} else {
+				_, err := addNewStudent(NewStudent{name, age})
+				handleError(err)
 			}
 
-			addNewStudent(NewStudent{name, age})
-
-			fmt.Printf("Enter (e) to return: ")
+			fmt.Printf("Enter any key to return: ")
 			scanner.Scan()
-			if key := scanner.Text(); key == "E" {
-				return
-			}
+
 		case "3":
 			fmt.Printf("\nEnter Student ID: ")
 			scanner.Scan()
+
 			idStr := scanner.Text()
 			id, err := strconv.Atoi(strings.TrimSpace(idStr))
 			if err != nil {
 				fmt.Printf("❌ Unsupported input format ❌\n")
-				return
+			} else {
+				_, err := removeStudent(id)
+				handleError(err)
 			}
-
-			removeStudent(id)
 
 			fmt.Printf("Enter (e) to return: ")
 			scanner.Scan()
-			if key := scanner.Text(); key == "E" {
-				return
-			}
+
 		case "4":
 			fmt.Printf("\nEnter Student ID: ")
 			scanner.Scan()
@@ -162,6 +177,7 @@ func main() {
 				return
 			}
 
+			//checks if students exist to prevent user from going any further
 			for _, student := range classroom {
 				if student.ID != id {
 					fmt.Printf("\n❌ Student with this ID does not exist ❌\n")

@@ -6,7 +6,8 @@ Your tasks are stored on your computer memory
 - Add Task
 - Delete Task
 - View Tasks
-- Clear Taks
+- Clear Task
+- Complete Task
 
 ### How to use
 1. Must have Go installed on your local machine
