@@ -4,9 +4,12 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -14,21 +17,52 @@ import (
 
 //defining the task type
 type Task struct {
-	ID int
-	Name string
-	Completed bool
-	CreatedAt time.Time
+	ID 				 int 			`json:"id"`
+	Name 			 string 		`json:"name"`
+	Completed  bool			`json:"completed"`
+	CreatedAt  time.Time	`json:"createdAt"`
 }
 
-//default task
-var allTasks []Task
+//get tasks from json file
+func getAllTasks() []*Task {
+	allTaskData, err := os.ReadFile("db/tasks.json")
+	handleError(err)
+
+	var allTasks []*Task
+	err = json.Unmarshal(allTaskData, &allTasks)
+	handleError(err)
+
+	return allTasks
+}
+
+//update tasks to json file
+func updateAllTasks(allTasks []*Task) {
+	allTaskJson, err := json.MarshalIndent(allTasks, "", " ")
+	handleError(err)
+	err = os.WriteFile("db/tasks.json", allTaskJson, 0644)
+	handleError(err)
+}
 
 //add task function
-func addTask(title string) (int, error) {
+func addTask(title string) error {
+	//gets alltasks
+	allTasksData, err := os.ReadFile("db/tasks.json")
+	if err != nil {
+		if os.IsNotExist(err) {
+			er := os.MkdirAll("db", 0755)
+			handleError(er)
+		}
+	}
+
+	//converts it
+	var allTasks []Task
+	err = json.Unmarshal(allTasksData, &allTasks)
+	handleError(err)
+
 	//checks if task exist
 	for _, foundTask := range allTasks {
 		if foundTask.Name == title {
-			return 0, errors.New("❌ Tasks already exists ❌")
+			return errors.New("❌ Tasks already exists ❌")
 		}
 	}
 
@@ -49,24 +83,43 @@ func addTask(title string) (int, error) {
 	allTasks = append(allTasks, task)
 	fmt.Printf("\nTask added ✅")
 
-	return 1, nil
+	allTaskJson, err := json.MarshalIndent(allTasks, "", " ")
+	handleError(err)
+	err = os.WriteFile("db/tasks.json", allTaskJson, 0644)
+
+	return nil
 }
 
 //delete task function
-func deleteTask(id int) (int, error) {
+func deleteTask(id int) error {
+	allTasks := getAllTasks()
+
 	for i, task := range allTasks {
 		if task.ID == id {
 			allTasks = append(allTasks[:i], allTasks[i+1:]...)
 			fmt.Println("Task deleted ✅")
-			return 1, nil
+			updateAllTasks(allTasks)
+			return nil
 		}
 	}
 
-	return 0, errors.New("❌ Tasks ID does not exists ❌")
+	return errors.New("❌ Tasks ID does not exists ❌")
 }
 
 //view task function
 func viewTasks() {
+	db, err := os.ReadFile("db/tasks.json")
+	if err != nil {
+		if os.IsNotExist(err) {
+			fmt.Println("❌ Task database does not exists ❌")
+			return
+		}
+	}
+
+	var allTasks []*Task
+	err = json.Unmarshal(db, &allTasks)
+	handleError(err)
+
 	if len(allTasks) == 0 {
 		fmt.Println("❌ No Task Available ❌")
 	} else {
@@ -78,23 +131,28 @@ func viewTasks() {
 
 //clear task function 
 func clearTasks() {
-	for _, task := range allTasks {
-		deleteTask(task.ID)
-	}
-	fmt.Println("All Tasks Remove ✅")
+	var allTasks []*Task
+	allTaskJson, err := json.MarshalIndent(allTasks, "", " ")
+
+	err = os.WriteFile("db/tasks.json", allTaskJson, 0644)
+	handleError(err)
+	fmt.Println("Task Cleared Succesfully ✅")
 }
 
 //complete task function
-func completeTask(id int) (int, error) {
+func completeTask(id int) error {
+	allTasks := getAllTasks()
+
 	for i := range allTasks {
 		if allTasks[i].ID == id {
 			allTasks[i].Completed = true
 			fmt.Println("Task Completed ✅")
-			return 1, nil
+			updateAllTasks(allTasks)
+			return nil
 		}
 	}
 
-	return 0, errors.New("❌ Tasks ID does not exists ❌")
+	return errors.New("❌ Tasks ID does not exists ❌")
 }
 
 //error handling function
@@ -104,11 +162,25 @@ func handleError(err error) {
 	}
 }
 
+//clear terminal
+func clearTerminal() {
+	var cmd *exec.Cmd
+	switch runtime.GOOS {
+	case "windows":
+		cmd = exec.Command("cmd", "/c", "cls")
+	default:
+		cmd = exec.Command("clear")
+	}
+	cmd.Stdout = os.Stdout
+	cmd.Run()
+}
+
 func main() {
 	defer fmt.Println("Good Bye.")
 	scanner := bufio.NewScanner(os.Stdin)
 	
 	for {
+		clearTerminal()
 		fmt.Printf("\n🔊 Welcome to my Task-Manager Program.\n************\n")
 		fmt.Printf("\n1. Add Task\n2. Delete Task\n3. View all tasks\n4. Clear Task\n5. Complete a Task\n6. Exit\n")
 		fmt.Print("Choose an Option: ")
@@ -121,7 +193,7 @@ func main() {
 			fmt.Print("Enter a task: ")
 			scanner.Scan()
 			title := scanner.Text()
-			_, err := addTask(title)
+			err := addTask(title)
 			handleError(err)
 
 			fmt.Printf("\nEnter any key to return: ")
@@ -135,7 +207,7 @@ func main() {
 			if err != nil {
 				fmt.Print("ID not found")
 			} else {
-				_, err := deleteTask(id)
+				err := deleteTask(id)
 				handleError(err)
 			}
 
@@ -162,7 +234,7 @@ func main() {
 			if err != nil {
 				fmt.Print("❌ Invalid input format ❌")
 			} else {
-				_, err := completeTask(id)
+				err := completeTask(id)
 				handleError(err)
 			}
 

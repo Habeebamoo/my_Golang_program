@@ -1,0 +1,20 @@
+[
+ {
+  "id": 1,
+  "name": "wash the dishes",
+  "completed": true,
+  "createdAt": "2025-04-21T16:04:49.1666637+01:00"
+ },
+ {
+  "id": 2,
+  "name": "go to the cinema",
+  "completed": false,
+  "createdAt": "2025-04-21T16:05:03.1027737+01:00"
+ },
+ {
+  "id": 3,
+  "name": "cook food",
+  "completed": true,
+  "createdAt": "2025-04-21T16:05:11.3212245+01:00"
+ }
+]
