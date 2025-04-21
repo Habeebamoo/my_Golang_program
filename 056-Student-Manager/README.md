@@ -1,5 +1,7 @@
 # Student GradeBook Manager CLI Tool
-Student GradeBook Manager is a tool built with Golang that allows tutors to manage pupils profile and results storing the data on your computer memory
+Student GradeBook Manager is a tool built with Golang that allows tutors to manage pupils profile and results.
+
+The data exists in a classroom.json folder in the db directory, anytime you add a new student it will autoamtically create a new json file to store your info
 
 ### There are 4 prompts included in the program
 - View All Students (checks all pupils profile)
