@@ -15,6 +15,14 @@ import (
 	"time"
 )
 
+//defining my errors
+var (
+	ErrTaskAlreadyExists = errors.New("❌ Tasks already exists ❌")
+	ErrTaskIdNotExist = errors.New("❌ Tasks ID does not exists ❌")
+	ErrNoDatabase = errors.New("❌ Task database does not exists ❌")
+	ErrNoTaskAvailable = errors.New("❌ No Task Available ❌")
+)
+
 //defining the task type
 type Task struct {
 	ID 				 int 			`json:"id"`
@@ -62,7 +70,7 @@ func addTask(title string) error {
 	//checks if task exist
 	for _, foundTask := range allTasks {
 		if foundTask.Name == title {
-			return errors.New("❌ Tasks already exists ❌")
+			return ErrTaskAlreadyExists
 		}
 	}
 
@@ -103,16 +111,15 @@ func deleteTask(id int) error {
 		}
 	}
 
-	return errors.New("❌ Tasks ID does not exists ❌")
+	return ErrTaskIdNotExist
 }
 
 //view task function
-func viewTasks() {
+func viewTasks() error {
 	db, err := os.ReadFile("db/tasks.json")
 	if err != nil {
 		if os.IsNotExist(err) {
-			fmt.Println("❌ Task database does not exists ❌")
-			return
+			return ErrNoDatabase
 		}
 	}
 
@@ -121,12 +128,13 @@ func viewTasks() {
 	handleError(err)
 
 	if len(allTasks) == 0 {
-		fmt.Println("❌ No Task Available ❌")
+		return ErrNoTaskAvailable
 	} else {
 		for _, task := range allTasks {
 			fmt.Printf("\nTask Id: %d\nTask Item: %s\nCompleted: %v.\nCreated At: %v.\n_________\n", task.ID, task.Name, task.Completed, task.CreatedAt)
 		}
 	}
+	return nil
 }
 
 //clear task function 
@@ -152,7 +160,7 @@ func completeTask(id int) error {
 		}
 	}
 
-	return errors.New("❌ Tasks ID does not exists ❌")
+	return ErrTaskIdNotExist
 }
 
 //error handling function
@@ -215,7 +223,8 @@ func main() {
 			scanner.Scan()
 
 		case "3":
-			viewTasks()
+			err := viewTasks()
+			handleError(err)
 			
 			fmt.Printf("\nEnter any key to return: ")
 			scanner.Scan()
