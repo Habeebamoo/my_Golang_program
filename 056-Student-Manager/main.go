@@ -2,9 +2,12 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"errors"
+	"os/exec"
 	"fmt"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 )
@@ -13,13 +16,14 @@ import (
 var (
 	ErrStudentAlreadyExist = errors.New("\n❌ Student with this name already exists ❌\n")
 	ErrStudentDoesNotExist = errors.New("\n❌ Student with this ID does not exist ❌\n")
+	ErrNoStudentExists = errors.New("\n❌ No Student Exists in Classroom ❌\n")
 )
 
 type Student struct {
-	ID int
-	Name string
-	Age int
-	Grades map[string]int
+	ID int `json:"id"`
+	Name string	`json:"fullname"`
+	Age int `json:"age"`
+	Grades map[string]int `json:"grades"`
 }
 
 type NewStudent struct {
@@ -27,85 +31,139 @@ type NewStudent struct {
 	Age int
 }
 
-var classroom []*Student
+func getDatabase() []Student {
+	classroomData, err := os.ReadFile("db/classroom.json")
+	handleError(err)
+
+	var classroom []Student
+	err = json.Unmarshal(classroomData, &classroom)
+	return classroom
+}
+
+func updateDatabase(classroom []Student) {
+	classroomJson, err := json.MarshalIndent(classroom, "", " ")
+	handleError(err)
+
+	err = os.WriteFile("db/classroom.json", classroomJson, 0644)
+	handleError(err)
+}
 
 //view all students
-func viewAllStudents() {
+func viewAllStudents() error {
+	classroom := getDatabase()
+
 	if len(classroom) == 0 {
-		fmt.Printf("\n❌ No Student Exists in Classroom ❌\n")
-		return
+		return ErrNoStudentExists
 	}
 
 	for _, student := range classroom {
-		fmt.Printf("\n______________\nStudent ID: %d\nStudent name: %s\nStudent age: %d\nMaths: %d\nEng: %d\nPhy: %d\nChem: %d\nBio: %d\n_____________\n", student.ID, student.Name, student.Age, student.Grades["Maths"], student.Grades["Eng"], student.Grades["Phy"], student.Grades["Chem"], student.Grades["Bio"])
+		fmt.Printf("\n______________\nStudent ID: %d\nStudent name: %s\nStudent age: %d\nMaths: %d\nEng: %d\nPhy: %d\nChem: %d\nBio: %d\n_____________\n", student.ID, student.Name, student.Age, student.Grades["maths"], student.Grades["eng"], student.Grades["phy"], student.Grades["chem"], student.Grades["bio"])
 	}
+	return nil
 }
 
 //add new student 
-func addNewStudent(s NewStudent) (int, error) {
+func addNewStudent(s NewStudent) error {
+	//checks if database exists
+	classroomData, err := os.ReadFile("db/classroom.json")
+	if err != nil {
+		if os.IsNotExist(err) {
+			er := os.MkdirAll("db", 0755)
+			handleError(er)
+		}
+	}
+
+	var classroom []*Student
+	err = json.Unmarshal(classroomData, &classroom)
+	handleError(err)
+
 	//checks if student Name already exists
 	for _, student := range classroom {
 		if student.Name == s.Name {
-			return 0, ErrStudentAlreadyExist
+			return ErrStudentAlreadyExist
 		}
 	}
 
 	//if not build new student profile
 	id := len(classroom) + 1
 	defaultGrade := map[string]int{
-		"Maths": 0,
-		"Eng": 0,
-		"Phy": 0,
-		"Chem": 0,
-		"Bio": 0,
+		"maths": 0,
+		"eng": 0,
+		"phy": 0,
+		"chem": 0,
+		"bio": 0,
 	}
 
 	classroom = append(classroom, &Student{id, s.Name, s.Age, defaultGrade})
 	fmt.Println("\n✅ Student has been added successfully")
-	return 1, nil
+	
+	//updates the database
+	classroomJson, err := json.MarshalIndent(classroom, "", " ")
+	handleError(err)
+	err = os.WriteFile("db/classroom.json", classroomJson, 0644)
+	handleError(err)
+
+	return nil
 }
 
 //remove existing student
-func removeStudent(id int) (int, error) {
+func removeStudent(id int) error {
+	classroom := getDatabase()
+
 	for i, student := range classroom {
 		if student.ID == id {
 			fmt.Printf("\nRemoving %s profile\n", student.Name)
 			classroom = append(classroom[:i], classroom[i+1:]...)
 			fmt.Println("\n✅ Student profile has been deleted")
-			return 1, nil
+			updateDatabase(classroom)
+			return nil
 		}
 	}
 
-	return 0, ErrStudentDoesNotExist
+	return ErrStudentDoesNotExist
 }
 
 //update student data
-func updateStudentData(id, mathScore, engScore, phyScore, chemScore, bioScore int) {
+func updateStudentData(id, mathScore, engScore, phyScore, chemScore, bioScore int) error {
+	classroomData, err := os.ReadFile("db/classroom.json")
+
+	var classroom []*Student
+	err = json.Unmarshal(classroomData, &classroom)
+	handleError(err)
+
 	//checks if student exist
 	for _, student := range classroom {
-		if student.ID != id {
-			fmt.Printf("\n❌ Student with this ID does not exist ❌\n")
-			return
-		}
-	}
-
-	var existingStudent *Student
-
-	for _, student := range classroom {
 		if student.ID == id {
-			existingStudent = student
+			var existingStudent *Student
+
+			for _, student := range classroom {
+				if student.ID == id {
+					existingStudent = student
+				}
+			}
+		
+			updatedGrades := map[string]int{
+				"maths": mathScore,
+				"eng": engScore,
+				"phy": phyScore,
+				"chem": chemScore,
+				"bio": bioScore,
+			}
+		
+			existingStudent.Grades = updatedGrades
+		
+			//updates the database
+			classroomJson, err := json.MarshalIndent(classroom, "", " ")
+			handleError(err)
+			err = os.WriteFile("db/classroom.json", classroomJson, 0644)
+			handleError(err)
+
+			fmt.Println("\n✅ Student grades have been updated successfully")
+			return nil
 		}
 	}
 
-	updatedGrades := map[string]int{
-		"Maths": mathScore,
-		"Eng": engScore,
-		"Phy": phyScore,
-		"Chem": chemScore,
-		"Bio": bioScore,
-	}
-
-	existingStudent.Grades = updatedGrades
+	return ErrStudentDoesNotExist
 }
 
 func handleError(err error) {
@@ -114,11 +172,25 @@ func handleError(err error) {
 	}
 }
 
+//clear terminal
+func clearTerminal() {
+	var cmd *exec.Cmd
+	switch runtime.GOOS {
+	case "windows":
+		cmd = exec.Command("cmd", "/c", "cls")
+	default:
+		cmd = exec.Command("clear")
+	}
+	cmd.Stdout = os.Stdout
+	cmd.Run()
+}
+
 func main() {
 	defer fmt.Println("\nGood Bye.")
 	scanner := bufio.NewScanner(os.Stdin)
 
 	for {
+		clearTerminal()
 		fmt.Printf("\n*********************************\nSTUDENT GRADEBOOK MANAGER v.0.9\n*********************************\n")
 		fmt.Printf("\n1. View All Students\n2. Add New Student\n3. Remove a Student\n4. Update a Student data\n5. Exit\n")
 		fmt.Printf("Enter a command: ")
@@ -127,7 +199,8 @@ func main() {
 
 		switch prompt {
 		case "1":
-			viewAllStudents()
+			err := viewAllStudents()
+			handleError(err)
 
 			fmt.Printf("Enter any key to return: ")
 			scanner.Scan()
@@ -144,7 +217,7 @@ func main() {
 			if err != nil {
 				fmt.Printf("❌ Unsupported input format ❌\n")
 			} else {
-				_, err := addNewStudent(NewStudent{name, age})
+				err := addNewStudent(NewStudent{name, age})
 				handleError(err)
 			}
 
@@ -160,7 +233,7 @@ func main() {
 			if err != nil {
 				fmt.Printf("❌ Unsupported input format ❌\n")
 			} else {
-				_, err := removeStudent(id)
+				err := removeStudent(id)
 				handleError(err)
 			}
 
@@ -175,14 +248,6 @@ func main() {
 			if err != nil {
 				fmt.Printf("❌ Unsupported input format ❌\n")
 				return
-			}
-
-			//checks if students exist to prevent user from going any further
-			for _, student := range classroom {
-				if student.ID != id {
-					fmt.Printf("\n❌ Student with this ID does not exist ❌\n")
-					return
-				}
 			}
 
 			//maths score
@@ -235,8 +300,8 @@ func main() {
 				return
 			}
 
-			updateStudentData(id, mathScore, engScore, phyScore, chemScore, bioScore)
-			fmt.Println("\n✅ Student grades have been updated successfully")
+			err = updateStudentData(id, mathScore, engScore, phyScore, chemScore, bioScore)
+			handleError(err)
 
 			fmt.Printf("Enter (e) to return: ")
 			scanner.Scan()

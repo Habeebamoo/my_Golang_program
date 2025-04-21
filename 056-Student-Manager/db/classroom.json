@@ -1,0 +1,14 @@
+[
+ {
+  "id": 1,
+  "fullname": "habeeb",
+  "age": 17,
+  "grades": {
+   "bio": 89,
+   "chem": 98,
+   "eng": 89,
+   "maths": 89,
+   "phy": 90
+  }
+ }
+]

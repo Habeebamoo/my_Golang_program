@@ -1,6 +1,6 @@
 # Task Manager CLI Tool
 Task Manager is a tool built with Golang that allows users to mange Tasks
-Your tasks are stored on your computer memory
+Your tasks are stored in a json file in the db folder
 
 ### There are 4 prompts included in the program
 - Add Task
